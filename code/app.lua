@@ -32,7 +32,13 @@ if res == ngx.null then
     return
 end
 
+local tutorial, err = red:get("tutorial-name")
+if not tutorial then
+    ngx.say("tutorial-name err: ", err)
+    return
+end
 ngx.say("dog: ", res)
+ngx.say("tutorial: ", tutorial)
 
 red:init_pipeline()
 red:set("cat", "Marry")

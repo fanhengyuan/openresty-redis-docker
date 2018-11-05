@@ -17,7 +17,17 @@ ARG RESTY_DEB_VERSION="=1.13.6.2-1~stretch1"
 LABEL resty_deb_flavor="${RESTY_DEB_FLAVOR}"
 LABEL resty_deb_version="${RESTY_DEB_VERSION}"
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+# 更改为 163 源
+RUN echo "deb http://mirrors.163.com/debian/ stretch main non-free contrib\n" \
+"deb http://mirrors.163.com/debian/ stretch-updates main non-free contrib\n"\
+"deb http://mirrors.163.com/debian/ stretch-backports main non-free contrib\n"\
+"deb-src http://mirrors.163.com/debian/ stretch main non-free contrib\n"\
+"deb-src http://mirrors.163.com/debian/ stretch-updates main non-free contrib\n"\
+"deb-src http://mirrors.163.com/debian/ stretch-backports main non-free contrib\n"\
+"deb http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib\n"\
+"deb-src http://mirrors.163.com/debian-security/ stretch/updates main non-free contrib\n" > /etc/apt/sources.list
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         ca-certificates \
         gettext-base \
@@ -25,7 +35,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         lsb-release \
         software-properties-common \
         wget \
+        git \
     && wget -qO /tmp/pubkey.gpg https://openresty.org/package/pubkey.gpg \
+    && wget -P /tmp/openresty_lua/ https://github.com/pintsized/lua-resty-http/archive/v0.12.tar.gz \
     && DEBIAN_FRONTEND=noninteractive apt-key add /tmp/pubkey.gpg \
     && rm /tmp/pubkey.gpg \
     && DEBIAN_FRONTEND=noninteractive add-apt-repository -y "deb http://openresty.org/package/debian $(lsb_release -sc) openresty" \
@@ -34,7 +46,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         lsb-release \
         software-properties-common \
         wget \
-    && DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get update -y\
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         openresty${RESTY_DEB_FLAVOR}${RESTY_DEB_VERSION} \
     && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
@@ -50,5 +62,9 @@ ENV PATH="$PATH:/usr/local/openresty${RESTY_DEB_FLAVOR}/luajit/bin:/usr/local/op
 # COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 # COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
+RUN cd /tmp/openresty_lua/ \
+    && tar -zxvf v0.12.tar.gz \
+    && cp lua-resty-http-0.12/lib/resty/*.lua /usr/local/openresty/lualib/resty/
+    
 CMD ["/usr/bin/openresty", "-g", "daemon off;"]
 EXPOSE 80

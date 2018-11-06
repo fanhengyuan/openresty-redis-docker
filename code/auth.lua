@@ -16,27 +16,23 @@ if 200 ~= res.status then
 end
 
 if args.key == res.body then
-    ngx.say("valid request")
+    ngx.say("<b>valid request.</b>")
 else
     -- ngx.say("invalid request")
     ngx.exit(401)
 end
 
 -- redis test
-local redis = require "resty.redis"
-local red = redis:new()
+local redis = require("code.utils.rediscli")
 
-red:set_timeout(1000) -- 1 sec
+local red = redis.new({host = "redis"})
+local tutorial, err = red:exec(
+    function(red)
+        -- 发布测试
+        red:publish("chat", "http 测试赛")
+        return red:get("tutorial-name")
+    end
+)
+ngx.say("<br />redis key: tutorial-name: ", tutorial)
 
-local ok, err = red:connect("redis", 6379)
-if not ok then
-    ngx.say("failed to connect: ", err)
-    return
-end
-
-local tutorial, err = red:get("tutorial-name")
-if not tutorial then
-    ngx.say("tutorial-name err: ", err)
-    return
-end
-ngx.say("<br />redis connected. key: tutorial-name: ", tutorial)
+ngx.say("<br />" .. os.date("%y.%m.%d %H:%M:%S %A %B"))

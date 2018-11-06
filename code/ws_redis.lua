@@ -54,7 +54,6 @@ local push = function()
     end
 end
 
-
 local co = ngx.thread.spawn(push)
 
 --main loop

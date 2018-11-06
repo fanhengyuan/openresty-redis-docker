@@ -22,6 +22,7 @@ else
     ngx.exit(401)
 end
 
+-- redis test
 local redis = require "resty.redis"
 local red = redis:new()
 
